@@ -34,7 +34,10 @@ app.post("/apply_jobs", async (req, res) => {
   res.send(result);
 });
 app.get("/apply_jobs", async (req, res) => {
-  const applyData = await applyJobsCollection.find().toArray();
+  const email = req.query.email;
+  const query = { candidate_email: email };
+  const applyData = await applyJobsCollection.find(query).toArray();
+  // const applyData = await applyJobsCollection.find().toArray();
   res.send(applyData);
 });
 app.get("/", (req, res) => {
