@@ -11,6 +11,7 @@ app.use(express.json());
 app.use(cors());
 
 const jobCollection = client.db("jobDB").collection("jobs");
+const applyJobsCollection = client.db("jobDB").collection("applyJobs");
 
 app.post("/jobs", async (req, res) => {
   const job = req.body;
@@ -26,6 +27,15 @@ app.get("/jobs/:id", async (req, res) => {
   const params = { _id: new ObjectId(id) };
   const result = await jobCollection.findOne(params);
   res.send(result);
+});
+app.post("/apply_jobs", async (req, res) => {
+  const applyData = req.body;
+  const result = await applyJobsCollection.insertOne(applyData);
+  res.send(result);
+});
+app.get("/apply_jobs", async (req, res) => {
+  const applyData = await applyJobsCollection.find().toArray();
+  res.send(applyData);
 });
 app.get("/", (req, res) => {
   res.send("Welcome to job portal world");
