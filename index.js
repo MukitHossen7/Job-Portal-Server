@@ -19,8 +19,15 @@ app.post("/jobs", async (req, res) => {
   res.send(result);
 });
 app.get("/jobs", async (req, res) => {
-  const jobs = await jobCollection.find().toArray();
-  res.send(jobs);
+  const email = req.query.email;
+  if (email) {
+    const query = { hr_email: email };
+    const jobs = await jobCollection.find(query).toArray();
+    res.send(jobs);
+  } else {
+    const jobs = await jobCollection.find().sort({ _id: -1 }).toArray();
+    res.send(jobs);
+  }
 });
 app.get("/jobs/:id", async (req, res) => {
   const id = req.params.id;
