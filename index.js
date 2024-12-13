@@ -47,6 +47,12 @@ app.get("/apply_jobs", async (req, res) => {
   // const applyData = await applyJobsCollection.find().toArray();
   res.send(applyData);
 });
+app.get("/apply_jobs/job/:job_id", async (req, res) => {
+  const jobId = req.params.job_id;
+  const query = { job_id: jobId };
+  const result = await applyJobsCollection.find(query).toArray();
+  res.send(result);
+});
 app.get("/", (req, res) => {
   res.send("Welcome to job portal world");
 });
