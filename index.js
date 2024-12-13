@@ -53,6 +53,18 @@ app.get("/apply_jobs/job/:job_id", async (req, res) => {
   const result = await applyJobsCollection.find(query).toArray();
   res.send(result);
 });
+app.patch("/apply_jobs/:id", async (req, res) => {
+  const id = req.params.id;
+  const updatedData = req.body;
+  const query = { _id: new ObjectId(id) };
+  const updateDoc = {
+    $set: {
+      status: updatedData.status,
+    },
+  };
+  const result = await applyJobsCollection.updateOne(query, updateDoc);
+  res.send(result);
+});
 app.get("/", (req, res) => {
   res.send("Welcome to job portal world");
 });
