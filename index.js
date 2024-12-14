@@ -44,7 +44,16 @@ app.get("/apply_jobs", async (req, res) => {
   const email = req.query.email;
   const query = { candidate_email: email };
   const applyData = await applyJobsCollection.find(query).toArray();
-  // const applyData = await applyJobsCollection.find().toArray();
+  for (const application of applyData) {
+    const params = { _id: new ObjectId(application.job_id) };
+    const job = await jobCollection.findOne(params);
+    if (job) {
+      application.title = job.title;
+      application.company_logo = job.company_logo;
+      application.location = job.location;
+      application.company = job.company;
+    }
+  }
   res.send(applyData);
 });
 app.get("/apply_jobs/job/:job_id", async (req, res) => {
