@@ -17,8 +17,21 @@ app.use(
   })
 );
 app.use(cookieParser());
-//custom middleware
 
+//custom middleware
+const verifyToken = (req, res, next) => {
+  const token = req.cookies.token;
+  if (!token) {
+    return res.status(401).send({ message: "Unauthorized Access" });
+  }
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    if (err) {
+      return res.status(401).send({ message: "Unauthorized Access" });
+    }
+    req.user = decoded;
+    next();
+  });
+};
 //jobs related Api
 const jobCollection = client.db("jobDB").collection("jobs");
 const applyJobsCollection = client.db("jobDB").collection("applyJobs");
@@ -77,9 +90,12 @@ app.post("/apply_jobs", async (req, res) => {
   const result = await applyJobsCollection.insertOne(applyData);
   res.send(result);
 });
-app.get("/apply_jobs", async (req, res) => {
+app.get("/apply_jobs", verifyToken, async (req, res) => {
   const email = req.query.email;
   const query = { candidate_email: email };
+  if (req.user.email !== req.query.email) {
+    return res.status(401).send({ message: "Unauthorized Access" });
+  }
   const applyData = await applyJobsCollection.find(query).toArray();
   for (const application of applyData) {
     const params = { _id: new ObjectId(application.job_id) };
