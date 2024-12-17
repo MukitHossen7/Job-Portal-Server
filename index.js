@@ -1,8 +1,6 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-const jwt = require("jsonwebtoken");
-const cookieParser = require("cookie-parser");
 const { connection, client } = require("./DB/MongoDB");
 const { ObjectId } = require("mongodb");
 const app = express();
@@ -10,57 +8,15 @@ const port = process.env.PORT || 5000;
 connection();
 
 app.use(express.json());
-app.use(
-  cors({
-    origin: ["http://localhost:5173"],
-    credentials: true,
-  })
-);
-app.use(cookieParser());
+app.use(cors());
 
 //custom middleware
-const verifyToken = (req, res, next) => {
-  const token = req.cookies.token;
-  if (!token) {
-    return res.status(401).send({ message: "Unauthorized Access" });
-  }
-  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-    if (err) {
-      return res.status(401).send({ message: "Unauthorized Access" });
-    }
-    req.user = decoded;
-    next();
-  });
-};
+
 //jobs related Api
 const jobCollection = client.db("jobDB").collection("jobs");
 const applyJobsCollection = client.db("jobDB").collection("applyJobs");
 
 //Auth related Api
-app.post("/jwt", async (req, res) => {
-  const user = req.body;
-  const token = jwt.sign(user, process.env.JWT_SECRET, { expiresIn: "1h" });
-
-  res
-    .cookie("token", token, {
-      httpOnly: true,
-      secure: false,
-    })
-    .send({
-      createToken: true,
-    });
-});
-
-app.post("/logOut", (req, res) => {
-  res
-    .clearCookie("token", {
-      httpOnly: true,
-      secure: false,
-    })
-    .send({
-      removeToken: true,
-    });
-});
 
 //jobs related Api
 app.post("/jobs", async (req, res) => {
@@ -90,12 +46,10 @@ app.post("/apply_jobs", async (req, res) => {
   const result = await applyJobsCollection.insertOne(applyData);
   res.send(result);
 });
-app.get("/apply_jobs", verifyToken, async (req, res) => {
+app.get("/apply_jobs", async (req, res) => {
   const email = req.query.email;
   const query = { candidate_email: email };
-  if (req.user.email !== req.query.email) {
-    return res.status(401).send({ message: "Unauthorized Access" });
-  }
+
   const applyData = await applyJobsCollection.find(query).toArray();
   for (const application of applyData) {
     const params = { _id: new ObjectId(application.job_id) };
